@@ -2,7 +2,7 @@
 Author: y
 Date: 2022-07-12 19:34:38
 LastEditors: y
-LastEditTime: 2022-07-12 21:16:34
+LastEditTime: 2022-07-13 19:58:59
 '''
 # -*- coding: UTF-8 -*-
 
@@ -26,23 +26,28 @@ def match_windows(win_title):
     :return: 句柄列表
     """
 
+    hw = []
     def callback(hwnd, hwnds):
         if win32gui.IsWindowVisible(hwnd) and win32gui.IsWindowEnabled(hwnd):
             win_text = win32gui.GetWindowText(hwnd)
+            # print(win_text)
             # 模糊匹配
             if win_text.find(win_title) > -1:
                 hwnds.append(hwnd)
+                # print(hwnds)
+
         return True
 
-    hwnds = []
-    win32gui.EnumWindows(callback, hwnds)  # 列出所有顶级窗口，并传递它们的指针给callback函数
-    return hwnds
+    win32gui.EnumWindows(callback, hw)  # 列出所有顶级窗口，并传递它们的指针给callback函数
+    return hw
 
 
 # 获取窗口信息
 def get_window_pos(name):
-    name = name
-    handle = win32gui.FindWindow(0, name)    # 类名，标题
+    # name = name
+    handle = match_windows(name)[0]
+    print(handle)
+    # handle = win32gui.FindWindow(0, name)    # 类名，标题
     # 获取窗口句柄
     if handle == 0:
         return None
@@ -53,11 +58,12 @@ def get_window_pos(name):
 
 def func():
     # 获取坐标
-    (x1, y1, x2, y2), handle = get_window_pos('vscode')
+    (x1, y1, x2, y2), handle = get_window_pos('Visual Studio Code')
+    # print((x1, y1, x2, y2))
     # 发送还原最小化窗口的信息
     # win32gui.SendMessage(handle, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
     # 设为高亮
-    win32gui.SetForegroundWindow(handle)
+    # win32gui.SetForegroundWindow(handle)
     # 目录不存在，则创建截图存放的目录
     if Path("images").is_dir() != 1:
         os.mkdir("images")
@@ -83,16 +89,19 @@ def func():
     # ssh.exec_command("python /www/wwwroot/ocr.py")  # 执行服务器上相应脚本
 
     # 模拟浏览器POST文件上传
-    # files = {'file': (pic_name, open("images/" + pic_name, 'rb'), 'image/png')}
-    # data = {
-    #     # "computer": 1
-    # }
-    # result = requests.post(url='http://127.0.0.1:5000/upload/img', data=data, files=files, headers={})
-    # print(result.text)
-    # os.remove("images/" + pic_name)
+    try:
+        files = {'file': (pic_name, open("images/" + pic_name, 'rb'), 'image/png')}
+        data = {
+            # "computer": 1
+        }
+        result = requests.post(url='http://127.0.0.1:5001/upload/img', data=data, files=files, headers={})
+        print(result.text)
+        os.remove("images/" + pic_name)
+    except:
+        print('上传图片失败..')
 
     # 开始定时任务
-    timer = threading.Timer(60, func, [])
+    timer = threading.Timer(10, func, [])
     timer.start()
 
 
